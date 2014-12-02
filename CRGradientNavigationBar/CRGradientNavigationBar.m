@@ -25,6 +25,12 @@ static CGFloat const kDefaultOpacity = 0.5f;
     if (self.gradientLayer == nil) {
         self.gradientLayer = [CAGradientLayer layer];
         self.gradientLayer.opacity = self.translucent ? kDefaultOpacity : 1.0f;
+        
+        if( self.translucent)
+        {
+            [self setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+            [self setShadowImage:[UIImage new]];
+        }
     }
     
     NSMutableArray * colors = nil;
@@ -52,19 +58,8 @@ static CGFloat const kDefaultOpacity = 0.5f;
             }
         }];
         
-        // make it possible for the graident to be seen for iOS 6 and iOS 7
-        if ( [self respondsToSelector:@selector(setBarTintColor:)] )
-        {
-            // iOS 7
-            self.barTintColor = [UIColor clearColor];
-        }
-        else
-        {
-            // iOS 6
-            self.tintColor = [UIColor clearColor];
-            // stops the gradient on iOS 6 UINavigationBar
-            [self setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
-        }
+        self.barTintColor = [UIColor clearColor];
+        self.tintColor = [UIColor clearColor];
     }
     
     // set the graident colours to the laery
@@ -80,17 +75,18 @@ static CGFloat const kDefaultOpacity = 0.5f;
     // allow all layout subviews call to adjust the frame
     if ( self.gradientLayer != nil )
     {
-        if ( floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_6_1 )
-        {
-             // iOS 7
-            CGFloat statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
-            self.gradientLayer.frame = CGRectMake(0, 0 - statusBarHeight, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds) + statusBarHeight);
+        CGRect bounds = self.bounds;
+        CGFloat statusBarHeight;
+
+        if (UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation)) {
+            statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.width;
+        } else {
+            statusBarHeight = [UIApplication sharedApplication].statusBarFrame.size.height;
         }
-        else
-        {
-            // iOS 6
-            self.gradientLayer.frame = CGRectMake(0, 0, CGRectGetWidth(self.bounds), CGRectGetHeight(self.bounds));
-        }
+        
+        self.gradientLayer.frame = CGRectMake(0, 0 - statusBarHeight,
+                                              CGRectGetWidth(bounds),
+                                              CGRectGetHeight(bounds) + statusBarHeight);
         
         // make sure the graident layer is at position 1
         [self.layer insertSublayer:self.gradientLayer atIndex:1];
